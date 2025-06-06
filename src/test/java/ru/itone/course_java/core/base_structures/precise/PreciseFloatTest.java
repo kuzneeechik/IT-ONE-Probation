@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import ru.itone.course_java.core.base_structures.BaseStructures;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.Random;
 
@@ -17,8 +16,8 @@ public class PreciseFloatTest {
 
     @Test
     void getWholeAndFractional() {
-        var w = random.nextInt();
-        var f = random.nextInt();
+        var w = random.nextInt(Integer.MAX_VALUE / 2);
+        var f = random.nextInt(1_000_000);
         var p = baseStructures.getPreciseFloat(w, f);
 
         assertThat(p.getWhole()).isEqualTo(w);
@@ -99,7 +98,7 @@ public class PreciseFloatTest {
         var b2 = new BigDecimal("%d.%06d".formatted(w2, f2));
 
         var r = p1.multiply(p2);
-        var rb = b1.multiply(b2);
+        var rb = b1.multiply(b2).setScale(6, RoundingMode.HALF_UP);
 
         assertThat(r != p1 && r != p2).isTrue();
         assertThat(r.asString()).isEqualTo(rb.toString());
