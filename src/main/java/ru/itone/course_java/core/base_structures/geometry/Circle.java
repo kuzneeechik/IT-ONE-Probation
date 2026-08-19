@@ -1,23 +1,25 @@
 package ru.itone.course_java.core.base_structures.geometry;
 
-public final class Square extends Rectangle {
+public final class Circle implements Shape {
 
-    public Square(float a, float b) {
-        super(a, b);
+    private final float r;
+
+    public Circle(float r) {
+        this.r = r;
     }
 
     @Override
     public double getArea() {
-        return super.getArea();
+        return Math.PI * r * r;
     }
 
     @Override
     public double getPerimeter() {
-        return super.getPerimeter();
+        return 2  * Math.PI * r;
     }
 
     @Override
     public ShapeType getShapeType() {
-        return ShapeType.SQUARE;
+        return ShapeType.CIRCLE;
     }
 }
