@@ -1,12 +1,12 @@
 package ru.itone.course_java.core.base_stream_api;
 
 import ru.itone.course_java.core.base_stream_api.model.Chest;
+import ru.itone.course_java.core.base_stream_api.model.ChestKey;
 import ru.itone.course_java.core.base_stream_api.model.Loot;
 import ru.itone.course_java.core.base_stream_api.model.LootType;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class BaseStreamApi {
 
@@ -14,42 +14,76 @@ public class BaseStreamApi {
      * Откройте все сундуки, подобрав ключи к их замкам
      */
     public List<Chest> openAllChests(ChestDataSource source) {
-        throw new UnsupportedOperationException();
+        var chests = source.getChests();
+        var keys = source.getKeys();
+
+        chests.forEach(chest -> {
+            ChestKey key = keys.stream()
+                    .filter(chest.getChestLock()::checkKey)
+                    .findFirst()
+                    .orElseThrow();
+
+            chest.getChestLock().unlock(key);
+        });
+
+        return chests;
     }
 
     /**
      * Откройте все сундуки, но ключей в этот раз не хватает, верните только те сундуки, что получилось открыть
      */
     public List<Chest> openAllChestsNotEnoughKey(ChestDataSource source) {
-        throw new UnsupportedOperationException();
+        var chests = source.getChests();
+        var keys = source.getKeys();
+
+        chests.forEach(chest -> keys.stream()
+                .filter(chest.getChestLock()::checkKey)
+                .findFirst()
+                .ifPresent(chest.getChestLock()::unlock));
+
+        return chests;
     }
 
     /**
      * Откройте все сундуки и верните все предметы, что в них лежат
      */
     public List<Loot> getEachChestContent(ChestDataSource source) {
-        throw new UnsupportedOperationException();
+        var chests = openAllChests(source);
+        var loots = new ArrayList<Loot>();
+
+        chests.forEach(chest -> loots.addAll(chest.getContent()));
+
+        return loots;
     }
 
     /**
      * Откройте все сундуки, вытащите все предметы и отсортируйте их по типам {@link LootType}
      */
     public Map<LootType, List<Loot>> sortAllLoot(ChestDataSource source) {
-        throw new UnsupportedOperationException();
+        var loots = getEachChestContent(source);
+
+        return loots.stream().collect(Collectors.groupingBy(Loot::getType));
     }
 
     /**
      * Откройте все сундуки и верните общей вес {@link Loot#getWeight()} всех полученных предметов
      */
     public int entireLootWeight(ChestDataSource source) {
-        throw new UnsupportedOperationException();
+        var loots = getEachChestContent(source);
+
+        return loots.stream()
+                .mapToInt(Loot::getWeight)
+                .sum();
     }
 
     /**
      * Откройте все сундуки и верните меч {@link Loot#getName()}.contains("Sword") с минимальным весом {@link Loot#getWeight()} из всех полученных предметов
      */
     public Optional<Loot> lightestSword(ChestDataSource source) {
-        throw new UnsupportedOperationException();
+        return getEachChestContent(source).stream()
+                .filter(loot -> loot.getType() == LootType.WEAPON &&
+                        loot.getName().contains("Sword"))
+                .min(Comparator.comparingInt(Loot::getWeight));
     }
 
     /**
@@ -59,7 +93,11 @@ public class BaseStreamApi {
      * Пример результата: "All-on-one Sword 1, Bad Potion 2, Citrus Stew"
      */
     public String allUniqueNames(ChestDataSource source) {
-        throw new UnsupportedOperationException();
+        return getEachChestContent(source).stream()
+                .map(Loot::getName)
+                .distinct()
+                .sorted(String::compareTo)
+                .collect(Collectors.joining(", "));
     }
 
     /**
@@ -67,7 +105,12 @@ public class BaseStreamApi {
      * верните {@link Map}, где ключ - это название предмета, а значение - его количество
      */
     public Map<String, Integer> goodPotionsAndFoodStatistics(ChestDataSource source) {
-        throw new UnsupportedOperationException();
+        return getEachChestContent(source).stream()
+                .filter(loot -> loot.getType() == LootType.FOOD ||
+                        loot.getType() == LootType.POTION)
+                .filter(loot -> !loot.getName().contains("Poison"))
+                .collect(Collectors.groupingBy(Loot::getName,
+                        Collectors.summingInt(loot -> 1)));
     }
 
     /**
@@ -75,7 +118,11 @@ public class BaseStreamApi {
      * после чего верните все предметы в этом и последующих 10 сундуках
      */
     public List<Loot> lootSpecificChests(ChestDataSource source) {
-        throw new UnsupportedOperationException();
+        return openAllChests(source).stream()
+                .dropWhile(chest -> chest.getContent().size() <= 80)
+                .limit(10)
+                .flatMap(chest -> chest.getContent().stream())
+                .toList();
     }
 
     /**
@@ -84,6 +131,20 @@ public class BaseStreamApi {
      * false в случае если такого предмета нет
      */
     public boolean searchForItem(ChestDataSource source, Loot item) {
-        throw new UnsupportedOperationException();
+        var chests = source.getChests();
+        var keys = source.getKeys();
+
+        return chests.stream()
+                .anyMatch(chest -> {
+                    var key = keys.stream()
+                            .filter(chest.getChestLock()::checkKey)
+                            .findFirst()
+                            .orElseThrow();
+
+                    chest.getChestLock().unlock(key);
+
+                    return chest.getContent().stream()
+                            .anyMatch(loot -> loot.equals(item));
+                });
     }
 }
