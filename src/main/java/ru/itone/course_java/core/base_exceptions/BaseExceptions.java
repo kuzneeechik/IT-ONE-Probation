@@ -8,8 +8,18 @@ import ru.itone.course_java.core.base_exceptions.model.Sex;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class BaseExceptions {
+public class
+
+
+
+
+
+
+BaseExceptions {
 
     //@formatter:off
     /**
@@ -59,7 +69,97 @@ public class BaseExceptions {
      */
     //@formatter:on
     public void checkPerson(Person person) {
-        throw new UnsupportedOperationException();
+        Objects.requireNonNull(
+                person.getFirstName(),
+                "Имя человека является обязательным параметром"
+        );
+
+        isValidName(person.getFirstName());
+        isValidName(person.getLastName());
+
+        if (person.getMiddleName() != null) {
+            isValidName(person.getMiddleName());
+        }
+
+        if (person.getPatronymic() != null) {
+            isValidName(person.getPatronymic());
+        }
+
+        if (person.getMiddleName() != null && person.getPatronymic() != null) {
+            throw new RuntimeException("Должно быть указано либо только Отчество, " +
+                    "либо только Дополнительное Имя");
+        }
+
+        if (person.getAge() <= 0 || person.getAge() > 120) {
+            throw new RuntimeException("Возраст человека должен быть больше 0 и не больше 120 лет, " +
+                    "указанный возраст " + person.getAge());
+        }
+
+        Objects.requireNonNull(
+                person.getSex(),
+                "Пол является обязательным параметром"
+        );
+
+        Objects.requireNonNull(
+                person.getIdentityDocument(),
+                "Требуется паспорт"
+        );
+
+        Objects.requireNonNull(
+                person.getIdentityDocument().getType(),
+                "Тип паспорта должен быть указан"
+        );
+
+        if ((person.isResident() && person.getIdentityDocument().getType() == DocType.FOREIGN_PASSPORT) ||
+                (!person.isResident() && person.getIdentityDocument().getType() == DocType.PASSPORT)) {
+            String isResident = person.isResident() ? "Да" : "Нет";
+
+            String documentType = person.getIdentityDocument().getType() == DocType.PASSPORT ?
+                    "Внутренний паспорт" : "Зарубежный паспорт";
+
+            throw new RuntimeException("Гражданство и тип паспорта должны совпадать, указано гражданин: " +
+                    isResident + ", тип паспорта: " + documentType);
+        }
+
+        String documentType = person.getIdentityDocument().getType() == DocType.PASSPORT ?
+                "во внутреннем" : "в зарубежном";
+
+        if ((person.isResident() && !person.getIdentityDocument().getCode().matches("[0-9]{4}")) ||
+                (!person.isResident() && !person.getIdentityDocument().getCode().matches("[ABC]"))) {
+            throw new RuntimeException("Код паспорта для граждан должен состоять из 4 цифр, " +
+                    "а для туристов быть A,B,C, " + documentType + " паспорте указан код: " +
+                    person.getIdentityDocument().getCode());
+        }
+
+        if ((person.isResident() && !person.getIdentityDocument().getNumber().matches("[0-9]{6}")) ||
+                (!person.isResident() &&
+                        !(person.getIdentityDocument().getNumber().matches("[0-9]{8}") ||
+                                person.getIdentityDocument().getNumber().matches("[0-9]{10}")))) {
+
+            throw new RuntimeException("Номер паспорта для граждан должен состоять из 6 цифр," +
+                    " а для туристов 8 или 10 цифр, " + documentType + " паспорте указан номер: " +
+                    person.getIdentityDocument().getNumber());
+        }
+
+        LocalDate issueDate = person.getIdentityDocument().getIssueDate();
+        LocalDate startDate = person.getIdentityDocument().getStartDate();
+
+        if (issueDate.isAfter(person.getIdentityDocument().getStartDate())) {
+            throw new RuntimeException("Дата выдачи паспорта " + issueDate +" не может быть " +
+                    "позже даты начала действия паспорта " + startDate);
+        }
+
+        if (issueDate.isAfter(today()) || startDate.isAfter(today())) {
+            throw new RuntimeException("Дата выдачи " + issueDate + " и начала действия паспорта " +
+                    startDate + " не должна быть в будущем");
+        }
+
+        LocalDate expiredDate = person.getIdentityDocument().getExpireDate();
+
+        if (expiredDate.isBefore(today())) {
+            throw new RuntimeException("Паспорт должен быть действительным, " +
+                    "срок действия паспорта подошёл к концу " + expiredDate);
+        }
     }
 
     /**
@@ -72,5 +172,18 @@ public class BaseExceptions {
      */
     public static LocalDate today() {
         return LocalDate.from(Instant.now().atOffset(ZoneOffset.UTC));
+    }
+
+    private void isValidName(String name) {
+        Pattern pattern = Pattern.compile("[^-a-zA-Zа-яА-яё /.'`]");
+        Matcher matcher = pattern.matcher(name);
+
+        if (matcher.find()) {
+            char badChar = name.charAt(matcher.start());
+
+            throw new RuntimeException("ФИО и Дополнительное Имя может состоять только из латиницы, " +
+                    "кириллицы, пробела, точки, тире, одинарной кавычки и апострофа, " +
+                    "символ " + badChar + " не валидный");
+        }
     }
 }

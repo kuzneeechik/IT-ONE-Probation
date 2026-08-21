@@ -1,6 +1,7 @@
 package ru.itone.course_java.core.basic_collections.brew;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 /**
  * Переопределите методы {@link Object#equals(Object)} и {@link Object#hashCode()} в этом классе и в {@link Grape} так,
@@ -31,6 +32,24 @@ public class Wine {
         this.vol = vol;
         this.abv = abv;
         this.grapeSource = grapeSource;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Wine wine = (Wine) o;
+        return name.equals(wine.getName()) &&
+                produced == wine.getProduced() &&
+                abv == wine.getAbv() &&
+                grapeSource.equals(wine.getGrapeSource());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, produced, vol, abv, grapeSource);
     }
 
     public String getName() {
