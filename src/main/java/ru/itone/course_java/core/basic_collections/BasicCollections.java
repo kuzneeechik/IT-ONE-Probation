@@ -6,6 +6,6 @@ public class BasicCollections {
      * Верните вашу реализацию {@link BTree} в этом методе
      */
     <T extends Comparable<T>> BTree<T> getNewTree() {
-        throw new UnsupportedOperationException();
+        return new BTreeClass<>();
     }
 }

@@ -1,6 +1,10 @@
 package ru.itone.course_java.core.base_structures.geometry;
 
-public class Square extends Rectangle {
+public final class Square extends Rectangle {
+
+    public Square(float a, float b) {
+        super(a, b);
+    }
 
     @Override
     public double getArea() {
@@ -10,5 +14,10 @@ public class Square extends Rectangle {
     @Override
     public double getPerimeter() {
         return super.getPerimeter();
+    }
+
+    @Override
+    public ShapeType getShapeType() {
+        return ShapeType.SQUARE;
     }
 }
