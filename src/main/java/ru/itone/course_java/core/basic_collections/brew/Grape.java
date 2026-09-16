@@ -25,15 +25,15 @@ public class Grape {
 
         Grape grape = (Grape) o;
         return sort.equals(grape.sort) &&
-                Math.abs(brix - grape.brix) <= 2 &&
+                Math.abs(brix - grape.brix) <= 2f &&
                 Math.abs(acidity - grape.acidity) <= 0.1f &&
-                collected.isBefore(grape.collected.plusYears(1).plusDays(1)) &&
-                collected.isAfter(grape.collected.minusYears(1).minusDays(1));
+                !collected.isBefore(grape.collected.minusYears(1)) &&
+                !collected.isAfter(grape.collected.plusYears(1));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(sort, brix, acidity, collected);
+        return Objects.hash(sort);
     }
 
     public String getSort() {

@@ -42,14 +42,14 @@ public class Wine {
 
         Wine wine = (Wine) o;
         return name.equals(wine.getName()) &&
-                produced == wine.getProduced() &&
+                produced.equals(wine.getProduced()) &&
                 abv == wine.getAbv() &&
                 grapeSource.equals(wine.getGrapeSource());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, produced, vol, abv, grapeSource);
+        return Objects.hash(name, produced, abv, grapeSource);
     }
 
     public String getName() {
